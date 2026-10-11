@@ -1,0 +1,105 @@
+@import "tailwindcss";
+@source "./";
+
+@layer base {
+  :root {
+    --bg-base: #101317;
+    --surface: #0f141a;
+    --surface-raised: #222932;
+    --surface-container: #1b2026;
+    --surface-container-high: #252a31;
+    --surface-container-highest: #30353c;
+    --surface-container-lowest: #0a0f14;
+    --surface-bright: #353a40;
+    --surface-muted: #2B333D;
+    --text-main: #F4F6F8;
+    --text-muted: #A5AFB9;
+    --primary: #b4c5ff;
+    --primary-container: #7c9cff;
+    --on-primary: #002979;
+    --on-primary-container: #002f88;
+    --secondary: #75daa5;
+    --secondary-container: #018053;
+    --on-secondary-container: #d1ffe1;
+    --tertiary: #f2c035;
+    --status-danger: #FF5B5B;
+    --status-warning: #F0BD4F;
+    --error-container: #93000a;
+    --cell-hidden: #C4C8CC;
+    --cell-highlight: #EDF0F2;
+    --cell-shadow: #8D949B;
+    --cell-revealed: #E7E9EB;
+    --grid-line: #8D949B;
+    --mine-count-1: #243CFF;
+    --mine-count-2: #16852B;
+    --mine-count-3: #F02028;
+    --mine-count-4: #151C8D;
+    --mine-count-5: #8D1018;
+    --mine-count-6: #087E80;
+    --mine-count-7: #17191C;
+    --mine-count-8: #7B8188;
+  }
+
+  html, body {
+    width: 100%;
+    min-height: 100dvh;
+    margin: 0;
+    padding: 0;
+    background-color: #101317;
+    color: #F4F6F8;
+    overscroll-behavior-y: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* Safe areas */
+  .pb-safe {
+    padding-bottom: env(safe-area-inset-bottom, 16px);
+  }
+  .pt-safe {
+    padding-top: env(safe-area-inset-top, 0px);
+  }
+}
+
+/* Material symbols outlined helper */
+.material-symbols-outlined {
+  font-family: 'Material Symbols Outlined';
+  font-weight: normal;
+  font-style: normal;
+  display: inline-block;
+  line-height: 1;
+  text-transform: none;
+  letter-spacing: normal;
+  word-wrap: normal;
+  white-space: nowrap;
+  direction: ltr;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Tactile Minesweeper Cell Bevels */
+.tactile-tile-unrevealed {
+  background-color: #C4C8CC;
+  border-top: 2px solid #EDF0F2;
+  border-left: 2px solid #EDF0F2;
+  border-bottom: 2px solid #8D949B;
+  border-right: 2px solid #8D949B;
+}
+
+.tactile-tile-unrevealed:active {
+  border-top: 2px solid #8D949B;
+  border-left: 2px solid #8D949B;
+  border-bottom: 2px solid #EDF0F2;
+  border-right: 2px solid #EDF0F2;
+}
+
+.tactile-tile-revealed {
+  background-color: #E7E9EB;
+  border: 1px solid #8D949B;
+}
+
+/* Digital segmented-like font numbers */
+.digital-display {
+  font-family: 'Inter', monospace;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.08em;
+  font-weight: 800;
+}
