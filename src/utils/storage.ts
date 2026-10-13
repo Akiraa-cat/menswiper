@@ -17,6 +17,11 @@ const DEFAULT_SETTINGS: GameSettings = {
   longPressDelay: 320,
 };
 
+function getGameStatsKey(username?: string | null) {
+  const normalizedUsername = username?.trim().toLowerCase();
+  return normalizedUsername ? `${GAME_STATS_KEY}_${normalizedUsername}` : GAME_STATS_KEY;
+}
+
 export function getStoredSettings(): GameSettings {
   if (typeof window === 'undefined') return DEFAULT_SETTINGS;
   try {
@@ -39,18 +44,23 @@ export function saveSettings(settings: GameSettings) {
   }
 }
 
-export function getStoredGameStats(): LocalGameStats {
+export function getStoredGameStats(username?: string | null): LocalGameStats {
   if (typeof window === 'undefined') return EMPTY_GAME_STATS;
   try {
-    const data = localStorage.getItem(GAME_STATS_KEY);
+    const data = localStorage.getItem(getGameStatsKey(username));
     return data ? { ...EMPTY_GAME_STATS, ...JSON.parse(data) } : EMPTY_GAME_STATS;
   } catch {
     return EMPTY_GAME_STATS;
   }
 }
 
-export function recordGameResult(won: boolean, score: number, dailyWinDate?: string) {
-  const current = getStoredGameStats();
+export function recordGameResult(
+  won: boolean,
+  score: number,
+  dailyWinDate?: string,
+  username?: string | null
+) {
+  const current = getStoredGameStats(username);
   const updated: LocalGameStats = {
     gamesPlayed: current.gamesPlayed + 1,
     gamesWon: current.gamesWon + (won ? 1 : 0),
@@ -60,7 +70,7 @@ export function recordGameResult(won: boolean, score: number, dailyWinDate?: str
       : current.dailyWinDates,
   };
   try {
-    localStorage.setItem(GAME_STATS_KEY, JSON.stringify(updated));
+    localStorage.setItem(getGameStatsKey(username), JSON.stringify(updated));
   } catch {
     // Keep the current session usable when storage is unavailable.
   }
@@ -86,4 +96,3 @@ export function getDailyWinStreak(dailyWinDates: string[], today = new Date()) {
   }
   return streak;
 }
-

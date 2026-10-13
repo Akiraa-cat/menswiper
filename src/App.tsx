@@ -103,7 +103,7 @@ export default function App() {
         }
       }
     }
-    setGameStats(recordGameResult(won, points, dailyWinDate));
+    setGameStats(recordGameResult(won, points, dailyWinDate, accountName));
 
     if (accountName) return;
 
@@ -118,7 +118,10 @@ export default function App() {
     setGameStats(getStoredGameStats());
     fetch('/api/account/me')
       .then((response) => readJsonResponse<{ username: string | null }>(response))
-      .then((data) => setAccountName(data.username))
+      .then((data) => {
+        setAccountName(data.username);
+        setGameStats(getStoredGameStats(data.username));
+      })
       .catch(() => setAccountName(null));
   }, []);
 
@@ -140,6 +143,7 @@ export default function App() {
 
   const handleAuthenticated = (username: string) => {
     setAccountName(username);
+    setGameStats(getStoredGameStats(username));
     setIsProfileOpen(false);
     setIsLoginPromptPending(false);
     if (guestScore > 0) {
@@ -655,7 +659,10 @@ export default function App() {
         isOpen={isProfileOpen}
         username={accountName}
         onAuthenticated={handleAuthenticated}
-        onLogout={() => setAccountName(null)}
+        onLogout={() => {
+          setAccountName(null);
+          setGameStats(getStoredGameStats());
+        }}
         onClose={() => setIsProfileOpen(false)}
       />
 

@@ -51,7 +51,7 @@ Tidak perlu membuat Google Cloud service account atau mengisi shared secret. Kon
 
 - Guest bisa langsung bermain. Setelah dua game selesai, aplikasi menawarkan login atau pembuatan akun; prompt bisa ditutup. Akun menyimpan password dalam bentuk salted PBKDF2-SHA256 hash. Token sesi disimpan melalui cookie HttpOnly dan berlaku hingga enam jam.
 - Akun baru mulai dari 0 poin. Setiap kemenangan menambahkan skor game ke total pemain di spreadsheet; kekalahan tidak menambah poin.
-- Win rate, streak harian, dan statistik game lain dihitung dari hasil nyata di perangkat ini. Statistik lokal tidak otomatis tersinkron antarperangkat.
+- Win rate, streak harian, dan statistik game lain disimpan terpisah untuk setiap akun pada perangkat ini; statistik guest disimpan terpisah dari akun. Statistik lokal tidak otomatis tersinkron antarperangkat.
 
 ## Pemeriksaan proyek
 
