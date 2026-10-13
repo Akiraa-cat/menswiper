@@ -11,7 +11,6 @@ import {
   InputMode,
   GameStatus,
   FaceMood,
-  UserStats,
   GameSettings,
 } from './types/game';
 import {
@@ -21,11 +20,8 @@ import {
   getDailySeed,
 } from './utils/prng';
 import {
-  getStoredStats,
-  updateStoredStats,
   getStoredSettings,
   saveSettings,
-  resetAllStorage,
 } from './utils/storage';
 import { playSound, triggerHaptic } from './utils/audio';
 
@@ -39,11 +35,11 @@ import { VictoryDefeatModal } from './components/VictoryDefeatModal';
 import { HelpModal } from './components/HelpModal';
 import { SettingsModal } from './components/SettingsModal';
 import { AccountModal } from './components/AccountModal';
+import { LoginPromptModal } from './components/LoginPromptModal';
 import { SeedModal } from './components/SeedModal';
 import { BottomNav, NavTab } from './components/BottomNav';
 import { DailyScreen } from './components/DailyScreen';
 import { LeaderboardScreen } from './components/LeaderboardScreen';
-import { StatsScreen } from './components/StatsScreen';
 
 export default function App() {
   // Navigation
@@ -55,11 +51,15 @@ export default function App() {
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isSeedModalOpen, setIsSeedModalOpen] = useState(false);
   const [isGameOverModalOpen, setIsGameOverModalOpen] = useState(false);
+  const [isLoginPromptDismissed, setIsLoginPromptDismissed] = useState(false);
+  const [isLoginPromptPending, setIsLoginPromptPending] = useState(false);
 
   // Storage State
-  const [stats, setStats] = useState<UserStats>(getStoredStats());
   const [settings, setSettings] = useState<GameSettings>(getStoredSettings());
   const [accountName, setAccountName] = useState<string | null>(null);
+  const [guestGamesCompleted, setGuestGamesCompleted] = useState(0);
+  const [guestScore, setGuestScore] = useState(0);
+  const [scoreSaveError, setScoreSaveError] = useState('');
 
   // Game Engine State
   const [difficulty, setDifficulty] = useState<Difficulty>('beginner');
@@ -79,16 +79,53 @@ export default function App() {
 
   // Timer Ref
   const timerIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const gameWasStartedRef = useRef(false);
 
-  // Load local stats and the signed-in account
+  const completeGuestGame = useCallback(() => {
+    if (!gameWasStartedRef.current) return;
+    gameWasStartedRef.current = false;
+    if (accountName) return;
+
+    const completedCount = guestGamesCompleted + 1;
+    setGuestGamesCompleted(completedCount);
+    if (completedCount >= 2 && !isLoginPromptDismissed) setIsLoginPromptPending(true);
+  }, [accountName, guestGamesCompleted, isLoginPromptDismissed]);
+
+  // Load local preferences; guest account state is intentionally memory-only.
   useEffect(() => {
-    setStats(getStoredStats());
     setSettings(getStoredSettings());
     fetch('/api/account/me')
       .then((response) => response.json())
       .then((data: { username: string | null }) => setAccountName(data.username))
       .catch(() => setAccountName(null));
   }, []);
+
+  const saveScoreToAccount = useCallback(async (points: number) => {
+    try {
+      const response = await fetch('/api/score', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ score: points }),
+      });
+      if (!response.ok) throw new Error('Score could not be saved. Check your connection and sign in again.');
+      setScoreSaveError('');
+      return true;
+    } catch (error) {
+      setScoreSaveError(error instanceof Error ? error.message : 'Score could not be saved.');
+      return false;
+    }
+  }, []);
+
+  const handleAuthenticated = (username: string) => {
+    setAccountName(username);
+    setIsProfileOpen(false);
+    setIsLoginPromptPending(false);
+    if (guestScore > 0) {
+      void saveScoreToAccount(guestScore).then((saved) => {
+        if (saved) setGuestScore(0);
+      });
+    }
+  };
 
   // Stop timer helper
   const stopTimer = useCallback(() => {
@@ -118,6 +155,8 @@ export default function App() {
   const initGame = useCallback(
     (newSeed?: string, diff: Difficulty = difficulty) => {
       stopTimer();
+      gameWasStartedRef.current = false;
+      setScoreSaveError('');
       const cfg = DIFFICULTY_PRESETS[diff];
       const targetSeed = newSeed || seed;
 
@@ -187,51 +226,23 @@ export default function App() {
         setGrid(finalizedGrid);
         setRemainingMines(0);
 
+        completeGuestGame();
+
         // Bonus score calculation
         const timeBonus = Math.max(0, 500 - timerVal * 2);
         const finalScore = currentScore + 500 + timeBonus;
         setScore(finalScore);
 
         if (accountName) {
-          void fetch('/api/score', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ score: finalScore }),
-          });
+          void saveScoreToAccount(finalScore);
+        } else {
+          setGuestScore((points) => points + finalScore);
         }
-
-        // Update user stats
-        const currentBestTime =
-          difficulty === 'beginner'
-            ? stats.beginnerBestTime
-            : difficulty === 'intermediate'
-            ? stats.intermediateBestTime
-            : stats.expertBestTime;
-
-        const newBestTime =
-          currentBestTime === null ? timerVal : Math.min(currentBestTime, timerVal);
-
-        const newStats = updateStoredStats({
-          gamesWon: stats.gamesWon + 1,
-          totalScore: stats.totalScore + finalScore,
-          currentStreak: stats.currentStreak + 1,
-          maxStreak: Math.max(stats.maxStreak, stats.currentStreak + 1),
-          beginnerBestTime:
-            difficulty === 'beginner' ? newBestTime : stats.beginnerBestTime,
-          intermediateBestTime:
-            difficulty === 'intermediate' ? newBestTime : stats.intermediateBestTime,
-          expertBestTime:
-            difficulty === 'expert' ? newBestTime : stats.expertBestTime,
-          completedDailies: isDaily
-            ? Array.from(new Set([...stats.completedDailies, seed]))
-            : stats.completedDailies,
-        });
-        setStats(newStats);
 
         setIsGameOverModalOpen(true);
       }
     },
-    [accountName, difficulty, isDaily, seed, settings, stats, stopTimer, timerVal]
+    [accountName, completeGuestGame, difficulty, saveScoreToAccount, settings, stopTimer, timerVal]
   );
 
   // Cascade reveal algorithm
@@ -279,7 +290,6 @@ export default function App() {
       playSound.explosion(settings.soundEnabled);
       triggerHaptic('heavy', settings.hapticsEnabled);
 
-      const cfg = DIFFICULTY_PRESETS[difficulty];
       const revealedGrid = currentGrid.map((row, r) =>
         row.map((cell, c) => {
           if (r === hitR && c === hitC) {
@@ -297,18 +307,12 @@ export default function App() {
 
       setGrid(revealedGrid);
 
-      // Record defeat in stats
-      const newStats = updateStoredStats({
-        gamesPlayed: stats.gamesPlayed + 1,
-        currentStreak: 0,
-      });
-      setStats(newStats);
-
       setTimeout(() => {
         setIsGameOverModalOpen(true);
+        completeGuestGame();
       }, 700);
     },
-    [difficulty, settings, stats.gamesPlayed, stopTimer]
+    [completeGuestGame, settings, stopTimer]
   );
 
   // Cell Click (Dig or Flag based on active input mode)
@@ -338,9 +342,7 @@ export default function App() {
         );
         setStatus('playing');
         startTimer();
-
-        // Increment games played
-        setStats((prev) => updateStoredStats({ gamesPlayed: prev.gamesPlayed + 1 }));
+        gameWasStartedRef.current = true;
       }
 
       const cell = currentGrid[r][c];
@@ -406,7 +408,6 @@ export default function App() {
         playSound.flag(settings.soundEnabled);
         triggerHaptic('medium', settings.hapticsEnabled);
         setRemainingMines((prev) => prev - 1);
-        setStats((prev) => updateStoredStats({ totalMinesFlagged: prev.totalMinesFlagged + 1 }));
       } else {
         playSound.unflag(settings.soundEnabled);
         triggerHaptic('light', settings.hapticsEnabled);
@@ -575,23 +576,13 @@ export default function App() {
         )}
 
         {activeTab === 'daily' && (
-          <DailyScreen stats={stats} onPlayDaily={handlePlaySpecificSeed} />
+          <DailyScreen onPlayDaily={handlePlaySpecificSeed} />
         )}
 
         {activeTab === 'records' && (
           <LeaderboardScreen
             accountName={accountName}
             onOpenAccount={() => setIsProfileOpen(true)}
-          />
-        )}
-
-        {activeTab === 'stats' && (
-          <StatsScreen
-            stats={stats}
-            onLaunchCustomSeed={(customSeed, customDiff) => {
-              setActiveTab('play');
-              initGame(customSeed, customDiff);
-            }}
           />
         )}
       </main>
@@ -606,9 +597,26 @@ export default function App() {
         timeSeconds={timerVal}
         score={score}
         seed={seed}
+        saveMessage={scoreSaveError}
         onPlayAgain={handleRegenerateSeed}
         onInspectBoard={() => setIsGameOverModalOpen(false)}
         onClose={() => setIsGameOverModalOpen(false)}
+      />
+
+      <LoginPromptModal
+        isOpen={
+          !accountName && isLoginPromptPending && !isLoginPromptDismissed && !isGameOverModalOpen &&
+          (status === 'won' || status === 'lost' || status === 'idle')
+        }
+        onLogin={() => {
+          setIsLoginPromptDismissed(true);
+          setIsLoginPromptPending(false);
+          setIsProfileOpen(true);
+        }}
+        onClose={() => {
+          setIsLoginPromptDismissed(true);
+          setIsLoginPromptPending(false);
+        }}
       />
 
       <HelpModal isOpen={isHelpOpen} onClose={() => setIsHelpOpen(false)} />
@@ -620,17 +628,13 @@ export default function App() {
           setSettings(newSettings);
           saveSettings(newSettings);
         }}
-        onResetData={() => {
-          resetAllStorage();
-          setStats(getStoredStats());
-        }}
         onClose={() => setIsSettingsOpen(false)}
       />
 
       <AccountModal
         isOpen={isProfileOpen}
         username={accountName}
-        onAuthenticated={setAccountName}
+        onAuthenticated={handleAuthenticated}
         onLogout={() => setAccountName(null)}
         onClose={() => setIsProfileOpen(false)}
       />

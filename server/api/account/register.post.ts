@@ -1,6 +1,6 @@
 import { createError, defineEventHandler, readBody } from 'h3';
-import { setAccountSession } from '../../utils/account';
 import { callAppsScript } from '../../utils/appsScript';
+import { setSessionCookie } from '../../utils/session';
 
 export default defineEventHandler(async (event) => {
   const body = await readBody<{ username?: unknown; password?: unknown }>(event);
@@ -14,7 +14,7 @@ export default defineEventHandler(async (event) => {
   }
 
   const result = await callAppsScript(event, 'register', { username, password });
-  if (!result.username) throw createError({ statusCode: 502, statusMessage: 'Apps Script returned an invalid account response.' });
-  setAccountSession(event, result.username);
+  if (!result.username || !result.sessionToken) throw createError({ statusCode: 502, statusMessage: 'Apps Script returned an invalid account response.' });
+  setSessionCookie(event, result.sessionToken);
   return { username: result.username };
 });

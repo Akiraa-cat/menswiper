@@ -26,37 +26,12 @@ export type GameStatus = 'idle' | 'playing' | 'won' | 'lost';
 
 export type FaceMood = 'smile' | 'surprised' | 'won' | 'lost' | 'pressed';
 
-export interface GameRecord {
-  id: string;
-  rank?: number;
-  mode: 'Beginner' | 'Intermediate' | 'Expert' | 'Custom';
-  time: number;
-  score: number;
-  date: string;
-  timestamp: number;
-  seed: string;
-}
-
-export interface UserStats {
-  gamesPlayed: number;
-  gamesWon: number;
-  beginnerBestTime: number | null;
-  intermediateBestTime: number | null;
-  expertBestTime: number | null;
-  totalScore: number;
-  totalMinesFlagged: number;
-  currentStreak: number;
-  maxStreak: number;
-  completedDailies: string[]; // array of daily seed strings e.g. "DAILY-084"
-}
-
 export interface GameSettings {
   soundEnabled: boolean;
   hapticsEnabled: boolean;
   quickChord: boolean;
   autoFitGrid: boolean;
   longPressDelay: number;
-  playerName: string;
 }
 
 export const DIFFICULTY_PRESETS: Record<Difficulty, DifficultyConfig> = {

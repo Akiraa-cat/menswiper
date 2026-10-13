@@ -4,6 +4,7 @@ interface AppsScriptResponse {
   ok: boolean;
   error?: string;
   username?: string;
+  sessionToken?: string;
   score?: number;
   entries?: { username: string; score: number; rank: number }[];
 }
@@ -14,7 +15,7 @@ const ERROR_STATUS: Record<string, number> = {
   USERNAME_TAKEN: 409,
   INVALID_CREDENTIALS: 401,
   ACCOUNT_NOT_FOUND: 401,
-  UNAUTHORIZED: 401,
+  INVALID_SESSION: 401,
   INVALID_SCORE: 400,
 };
 
@@ -24,8 +25,8 @@ const ERROR_MESSAGES: Record<string, string> = {
   USERNAME_TAKEN: 'That username is already in use.',
   INVALID_CREDENTIALS: 'Username or password is incorrect.',
   ACCOUNT_NOT_FOUND: 'Account no longer exists.',
+  INVALID_SESSION: 'Your session expired. Please sign in again.',
   INVALID_SCORE: 'Invalid win score.',
-  UNAUTHORIZED: 'Apps Script shared secret does not match.',
   TRY_AGAIN: 'The service is busy. Please try again.',
 };
 
@@ -35,15 +36,15 @@ export async function callAppsScript(
   values: Record<string, string | number> = {}
 ) {
   const config = useRuntimeConfig(event);
-  if (!config.appsScriptUrl || !config.appsScriptSharedSecret) {
-    throw createError({ statusCode: 503, statusMessage: 'Apps Script URL and shared secret are not configured.' });
+  if (!config.appsScriptUrl) {
+    throw createError({ statusCode: 503, statusMessage: 'Apps Script URL is not configured.' });
   }
 
   let result: AppsScriptResponse;
   try {
     result = await $fetch<AppsScriptResponse>(config.appsScriptUrl, {
       method: 'POST',
-      body: { action, secret: config.appsScriptSharedSecret, ...values },
+      body: { action, ...values },
     });
   } catch {
     throw createError({ statusCode: 502, statusMessage: 'Could not reach the Apps Script web app.' });

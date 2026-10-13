@@ -6,6 +6,7 @@ interface VictoryDefeatModalProps {
   timeSeconds: number;
   score: number;
   seed: string;
+  saveMessage?: string;
   onPlayAgain: () => void;
   onInspectBoard: () => void;
   onClose: () => void;
@@ -17,6 +18,7 @@ export const VictoryDefeatModal: React.FC<VictoryDefeatModalProps> = ({
   timeSeconds,
   score,
   seed,
+  saveMessage,
   onPlayAgain,
   onInspectBoard,
 }) => {
@@ -77,6 +79,8 @@ export const VictoryDefeatModal: React.FC<VictoryDefeatModalProps> = ({
             </span>
           </div>
         </div>
+
+        {saveMessage && <p role="alert" className="mb-3 text-sm text-[#FF7777]">{saveMessage}</p>}
 
         {/* Button Actions */}
         <div className="w-full flex flex-col gap-2">

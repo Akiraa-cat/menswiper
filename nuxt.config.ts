@@ -6,8 +6,6 @@ export default defineNuxtConfig({
   devtools: { enabled: true },
   runtimeConfig: {
     appsScriptUrl: '',
-    appsScriptSharedSecret: '',
-    sessionSecret: '',
   },
   css: ['~/../src/index.css'],
   vite: {

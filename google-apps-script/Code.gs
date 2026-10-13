@@ -4,7 +4,6 @@ const PASSWORD_ITERATIONS = 30000;
 function doPost(event) {
   try {
     const request = JSON.parse(event.postData.contents || '{}');
-    verifySharedSecret(request.secret);
 
     let result;
     switch (request.action) {
@@ -17,8 +16,15 @@ function doPost(event) {
       case 'leaderboard':
         result = { entries: getLeaderboard() };
         break;
+      case 'session':
+        result = { username: getSessionUsername(request.sessionToken) };
+        break;
+      case 'logout':
+        removeSession(request.sessionToken);
+        result = {};
+        break;
       case 'addScore':
-        result = addScore(request.username, request.score);
+        result = addScore(request.sessionToken, request.score);
         break;
       default:
         throw new Error('UNKNOWN_ACTION');
@@ -28,13 +34,6 @@ function doPost(event) {
   } catch (error) {
     const message = error && error.message ? error.message : 'INTERNAL_ERROR';
     return jsonResponse({ ok: false, error: message });
-  }
-}
-
-function verifySharedSecret(receivedSecret) {
-  const expectedSecret = PropertiesService.getScriptProperties().getProperty('API_SHARED_SECRET');
-  if (!expectedSecret || !constantTimeEquals(String(receivedSecret || ''), expectedSecret)) {
-    throw new Error('UNAUTHORIZED');
   }
 }
 
@@ -89,7 +88,7 @@ function registerAccount(username, password) {
   } finally {
     lock.releaseLock();
   }
-  return { username: username };
+  return createSession(username);
 }
 
 function loginAccount(username, password) {
@@ -100,7 +99,24 @@ function loginAccount(username, password) {
   if (rowIndex < 0 || !verifyPassword(password, String(rows[rowIndex][2] || ''))) {
     throw new Error('INVALID_CREDENTIALS');
   }
-  return { username: String(rows[rowIndex][1]) };
+  return createSession(String(rows[rowIndex][1]));
+}
+
+function createSession(username) {
+  const token = Utilities.getUuid().replace(/-/g, '') + Utilities.getUuid().replace(/-/g, '');
+  CacheService.getScriptCache().put('session_' + token, username, 21600);
+  return { username: username, sessionToken: token };
+}
+
+function getSessionUsername(sessionToken) {
+  if (typeof sessionToken !== 'string' || !/^[a-f0-9]{64}$/i.test(sessionToken)) return '';
+  return CacheService.getScriptCache().get('session_' + sessionToken) || '';
+}
+
+function removeSession(sessionToken) {
+  if (typeof sessionToken === 'string' && /^[a-f0-9]{64}$/i.test(sessionToken)) {
+    CacheService.getScriptCache().remove('session_' + sessionToken);
+  }
 }
 
 function getLeaderboard() {
@@ -118,8 +134,9 @@ function getLeaderboard() {
   });
 }
 
-function addScore(username, score) {
-  username = String(username || '').trim();
+function addScore(sessionToken, score) {
+  const username = getSessionUsername(sessionToken);
+  if (!username) throw new Error('INVALID_SESSION');
   score = Number(score);
   if (!Number.isSafeInteger(score) || score < 1 || score > 10000000) throw new Error('INVALID_SCORE');
 

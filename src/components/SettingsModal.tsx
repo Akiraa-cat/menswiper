@@ -6,7 +6,6 @@ interface SettingsModalProps {
   isOpen: boolean;
   settings: GameSettings;
   onUpdateSettings: (newSettings: GameSettings) => void;
-  onResetData: () => void;
   onClose: () => void;
 }
 
@@ -14,7 +13,6 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   isOpen,
   settings,
   onUpdateSettings,
-  onResetData,
   onClose,
 }) => {
   if (!isOpen) return null;
@@ -145,20 +143,6 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
             />
           </div>
 
-          {/* Reset Device Data */}
-          <div className="pt-2">
-            <button
-              onClick={() => {
-                if (window.confirm('Reset daily completions and local statistics?')) {
-                  onResetData();
-                  onClose();
-                }
-              }}
-              className="w-full py-2.5 bg-[#93000a]/20 hover:bg-[#93000a]/40 text-[#FF5B5B] border border-[#93000a]/50 font-bold rounded-xl text-xs transition-colors"
-            >
-              Reset Local Game Data
-            </button>
-          </div>
         </div>
 
         <div className="pt-2">
