@@ -88,6 +88,30 @@ export default function App() {
   const timerIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const gameWasStartedRef = useRef(false);
 
+  const recordAccountGame = useCallback(async (
+    won: boolean,
+    points: number,
+    dailyWinDate?: string
+  ) => {
+    try {
+      const response = await fetch('/api/game-result', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          won,
+          score: points,
+          dailyWinDate,
+          todayDate: getLocalDateKey(new Date()),
+        }),
+      });
+      const data = await readJsonResponse<{ stats: LocalGameStats }>(response);
+      setGameStats(data.stats);
+      setScoreSaveError('');
+    } catch (error) {
+      setScoreSaveError(error instanceof Error ? error.message : 'Game stats could not be saved.');
+    }
+  }, []);
+
   const completeGame = useCallback((won: boolean, points: number) => {
     if (!gameWasStartedRef.current) return;
     gameWasStartedRef.current = false;
@@ -103,14 +127,16 @@ export default function App() {
         }
       }
     }
-    setGameStats(recordGameResult(won, points, dailyWinDate, accountName));
-
-    if (accountName) return;
+    if (accountName) {
+      void recordAccountGame(won, points, dailyWinDate);
+      return;
+    }
+    setGameStats(recordGameResult(won, points, dailyWinDate));
 
     const completedCount = guestGamesCompleted + 1;
     setGuestGamesCompleted(completedCount);
     if (completedCount >= 2 && !isLoginPromptDismissed) setIsLoginPromptPending(true);
-  }, [accountName, guestGamesCompleted, isDaily, isLoginPromptDismissed, seed]);
+  }, [accountName, guestGamesCompleted, isDaily, isLoginPromptDismissed, recordAccountGame, seed]);
 
   // Load local preferences; guest account state is intentionally memory-only.
   useEffect(() => {
@@ -118,12 +144,35 @@ export default function App() {
     setGameStats(getStoredGameStats());
     fetch('/api/account/me')
       .then((response) => readJsonResponse<{ username: string | null }>(response))
-      .then((data) => {
-        setAccountName(data.username);
-        setGameStats(getStoredGameStats(data.username));
-      })
+      .then((data) => setAccountName(data.username))
       .catch(() => setAccountName(null));
   }, []);
+
+  useEffect(() => {
+    let isActive = true;
+    if (!accountName) {
+      setGameStats(getStoredGameStats());
+      return () => {
+        isActive = false;
+      };
+    }
+
+    fetch(`/api/account/stats?todayDate=${getLocalDateKey(new Date())}`)
+      .then((response) => readJsonResponse<LocalGameStats>(response))
+      .then((stats) => {
+        if (!isActive) return;
+        setGameStats(stats);
+        setScoreSaveError('');
+      })
+      .catch((error: unknown) => {
+        if (!isActive) return;
+        setScoreSaveError(error instanceof Error ? error.message : 'Game stats could not be loaded.');
+      });
+
+    return () => {
+      isActive = false;
+    };
+  }, [accountName]);
 
   const saveScoreToAccount = useCallback(async (points: number) => {
     try {
@@ -143,7 +192,6 @@ export default function App() {
 
   const handleAuthenticated = (username: string) => {
     setAccountName(username);
-    setGameStats(getStoredGameStats(username));
     setIsProfileOpen(false);
     setIsLoginPromptPending(false);
     if (guestScore > 0) {
@@ -258,9 +306,7 @@ export default function App() {
         setScore(finalScore);
         completeGame(true, finalScore);
 
-        if (accountName) {
-          void saveScoreToAccount(finalScore);
-        } else {
+        if (!accountName) {
           setGuestScore((points) => points + finalScore);
         }
 

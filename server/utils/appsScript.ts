@@ -7,6 +7,13 @@ interface AppsScriptResponse {
   sessionToken?: string;
   score?: number;
   entries?: { username: string; score: number; rank: number }[];
+  stats?: {
+    gamesPlayed: number;
+    gamesWon: number;
+    totalScore: number;
+    dailyWinDates: string[];
+  };
+  streak?: number;
 }
 
 const ERROR_STATUS: Record<string, number> = {
@@ -17,6 +24,8 @@ const ERROR_STATUS: Record<string, number> = {
   ACCOUNT_NOT_FOUND: 401,
   INVALID_SESSION: 401,
   INVALID_SCORE: 400,
+  INVALID_DATE: 400,
+  INVALID_STATS_DATA: 502,
 };
 
 const ERROR_MESSAGES: Record<string, string> = {
@@ -27,13 +36,15 @@ const ERROR_MESSAGES: Record<string, string> = {
   ACCOUNT_NOT_FOUND: 'Account no longer exists.',
   INVALID_SESSION: 'Your session expired. Please sign in again.',
   INVALID_SCORE: 'Invalid win score.',
+  INVALID_DATE: 'Invalid game date.',
+  INVALID_STATS_DATA: 'Stored game statistics are invalid.',
   TRY_AGAIN: 'The service is busy. Please try again.',
 };
 
 export async function callAppsScript(
   event: H3Event,
   action: string,
-  values: Record<string, string | number> = {}
+  values: Record<string, string | number | boolean> = {}
 ) {
   const config = useRuntimeConfig(event);
   if (!config.appsScriptUrl) {

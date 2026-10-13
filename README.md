@@ -41,7 +41,7 @@ Buka [http://localhost:3000](http://localhost:3000). Untuk menghentikan server, 
 NUXT_APPS_SCRIPT_URL=https://script.google.com/macros/s/ID_DEPLOYMENT/exec
 ```
 
-Aplikasi menggunakan spreadsheet dengan ID yang sudah diatur di `Code.gs` dan worksheet pertama. Baris pertama adalah header kolom index, username, password hash, dan score; data akun dimulai dari baris kedua. Jangan mengubah urutan kolom tersebut.
+Aplikasi menggunakan spreadsheet dengan ID yang sudah diatur di `Code.gs` dan worksheet pertama. Baris pertama berisi header `index`, `username`, `password hash`, `score`, `win`, `lose`, `streak`, dan `daily win dates`; data akun dimulai dari baris kedua. Script menambahkan header statistik jika spreadsheet lama masih memakai empat kolom awal. Jangan mengubah urutan kolom tersebut. Match dihitung dari win + lose, sedangkan win rate dihitung dari win / match × 100%.
 
 Jika Apps Script sudah pernah di-deploy, setelah mengganti kodenya buka **Deploy > Manage deployments > Edit**, pilih **New version**, lalu deploy lagi. URL biasanya tetap sama. Tanpa deployment versi terbaru atau akses **Anyone**, aplikasi bisa menerima HTTP 401/502.
 
@@ -51,7 +51,7 @@ Tidak perlu membuat Google Cloud service account atau mengisi shared secret. Kon
 
 - Guest bisa langsung bermain. Setelah dua game selesai, aplikasi menawarkan login atau pembuatan akun; prompt bisa ditutup. Akun menyimpan password dalam bentuk salted PBKDF2-SHA256 hash. Token sesi disimpan melalui cookie HttpOnly dan berlaku hingga enam jam.
 - Akun baru mulai dari 0 poin. Setiap kemenangan menambahkan skor game ke total pemain di spreadsheet; kekalahan tidak menambah poin.
-- Win rate, streak harian, dan statistik game lain disimpan terpisah untuk setiap akun pada perangkat ini; statistik guest disimpan terpisah dari akun. Statistik lokal tidak otomatis tersinkron antarperangkat.
+- Win rate dan hasil game akun disimpan per akun di spreadsheet, sehingga tersedia lintas perangkat. Guest tetap menggunakan statistik lokal pada perangkat.
 
 ## Pemeriksaan proyek
 
