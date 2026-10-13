@@ -11,7 +11,7 @@ export const BottomNav: React.FC<BottomNavProps> = ({ activeTab, onSelectTab }) 
   const tabs: { id: NavTab; label: string; icon: string }[] = [
     { id: 'play', label: 'Play', icon: 'sports_esports' },
     { id: 'daily', label: 'Daily', icon: 'calendar_today' },
-    { id: 'records', label: 'Records', icon: 'leaderboard' },
+    { id: 'records', label: 'Leaderboard', icon: 'leaderboard' },
     { id: 'stats', label: 'Stats', icon: 'military_tech' },
   ];
 

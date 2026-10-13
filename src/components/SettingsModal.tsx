@@ -149,14 +149,14 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
           <div className="pt-2">
             <button
               onClick={() => {
-                if (window.confirm('Reset all offline records, daily completions, and statistics?')) {
+                if (window.confirm('Reset daily completions and local statistics?')) {
                   onResetData();
                   onClose();
                 }
               }}
               className="w-full py-2.5 bg-[#93000a]/20 hover:bg-[#93000a]/40 text-[#FF5B5B] border border-[#93000a]/50 font-bold rounded-xl text-xs transition-colors"
             >
-              Reset Offline Local Storage Data
+              Reset Local Game Data
             </button>
           </div>
         </div>

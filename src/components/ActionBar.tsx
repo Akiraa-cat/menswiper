@@ -66,7 +66,7 @@ export const ActionBar: React.FC<ActionBarProps> = ({
             <circle cx="8" cy="16" fill="currentColor" r="1.5" />
             <circle cx="16" cy="16" fill="currentColor" r="1.5" />
           </svg>
-          <span>New RNG Map</span>
+          <span>New Map</span>
         </button>
 
         <button

@@ -11,7 +11,6 @@ import {
   InputMode,
   GameStatus,
   FaceMood,
-  GameRecord,
   UserStats,
   GameSettings,
 } from './types/game';
@@ -22,8 +21,6 @@ import {
   getDailySeed,
 } from './utils/prng';
 import {
-  getStoredRecords,
-  saveNewRecord,
   getStoredStats,
   updateStoredStats,
   getStoredSettings,
@@ -38,15 +35,14 @@ import { SubBar } from './components/SubBar';
 import { HUD } from './components/HUD';
 import { GameBoard } from './components/GameBoard';
 import { ActionBar } from './components/ActionBar';
-import { RecordsCard } from './components/RecordsCard';
 import { VictoryDefeatModal } from './components/VictoryDefeatModal';
 import { HelpModal } from './components/HelpModal';
 import { SettingsModal } from './components/SettingsModal';
-import { ProfileModal } from './components/ProfileModal';
+import { AccountModal } from './components/AccountModal';
 import { SeedModal } from './components/SeedModal';
 import { BottomNav, NavTab } from './components/BottomNav';
 import { DailyScreen } from './components/DailyScreen';
-import { RecordsScreen } from './components/RecordsScreen';
+import { LeaderboardScreen } from './components/LeaderboardScreen';
 import { StatsScreen } from './components/StatsScreen';
 
 export default function App() {
@@ -61,31 +57,37 @@ export default function App() {
   const [isGameOverModalOpen, setIsGameOverModalOpen] = useState(false);
 
   // Storage State
-  const [records, setRecords] = useState<GameRecord[]>([]);
   const [stats, setStats] = useState<UserStats>(getStoredStats());
   const [settings, setSettings] = useState<GameSettings>(getStoredSettings());
+  const [accountName, setAccountName] = useState<string | null>(null);
 
   // Game Engine State
   const [difficulty, setDifficulty] = useState<Difficulty>('beginner');
   const [seed, setSeed] = useState<string>('#RNG-8492');
   const [isDaily, setIsDaily] = useState<boolean>(false);
   const [mode, setMode] = useState<InputMode>('dig');
-  const [grid, setGrid] = useState<Cell[][]>([]);
+  const [grid, setGrid] = useState<Cell[][]>(() => {
+    const cfg = DIFFICULTY_PRESETS.beginner;
+    return createEmptyGrid(cfg.rows, cfg.cols);
+  });
   const [status, setStatus] = useState<GameStatus>('idle');
   const [faceMood, setFaceMood] = useState<FaceMood>('smile');
-  const [timerVal, setTimerVal] = useState<number>(44);
-  const [score, setScore] = useState<number>(140);
-  const [remainingMines, setRemainingMines] = useState<number>(4);
+  const [timerVal, setTimerVal] = useState<number>(0);
+  const [score, setScore] = useState<number>(0);
+  const [remainingMines, setRemainingMines] = useState<number>(DIFFICULTY_PRESETS.beginner.mines);
   const [isFitGrid, setIsFitGrid] = useState<boolean>(false);
 
   // Timer Ref
   const timerIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Load records & stats from storage
+  // Load local stats and the signed-in account
   useEffect(() => {
-    setRecords(getStoredRecords());
     setStats(getStoredStats());
     setSettings(getStoredSettings());
+    fetch('/api/account/me')
+      .then((response) => response.json())
+      .then((data: { username: string | null }) => setAccountName(data.username))
+      .catch(() => setAccountName(null));
   }, []);
 
   // Stop timer helper
@@ -111,43 +113,6 @@ export default function App() {
   useEffect(() => {
     return () => stopTimer();
   }, [stopTimer]);
-
-  // Pre-load default initial state matching screenshot exactly on first mount
-  useEffect(() => {
-    const cfg = DIFFICULTY_PRESETS.beginner;
-    const initialGrid = createEmptyGrid(cfg.rows, cfg.cols);
-
-    // Populate using seed #RNG-8492
-    const populated = populateMinesWithSeed(
-      initialGrid,
-      cfg.rows,
-      cfg.cols,
-      cfg.mines,
-      '#RNG-8492',
-      1,
-      1
-    );
-
-    // Open sample safe cluster (rows 0-2, cols 0-2) matching the screenshot
-    for (let r = 0; r <= 2; r++) {
-      for (let c = 0; c <= 2; c++) {
-        populated[r][c].revealed = true;
-      }
-    }
-
-    // Place the 3 tactical flags from the screenshot
-    if (populated[4]?.[5]) populated[4][5].flagged = true;
-    if (populated[6]?.[2]) populated[6][2].flagged = true;
-    if (populated[7]?.[7]) populated[7][7].flagged = true;
-
-    setGrid(populated);
-    setRemainingMines(4);
-    setScore(140);
-    setTimerVal(44);
-    setStatus('playing');
-    setFaceMood('smile');
-    startTimer();
-  }, [startTimer]);
 
   // Reset / Start Game
   const initGame = useCallback(
@@ -227,23 +192,13 @@ export default function App() {
         const finalScore = currentScore + 500 + timeBonus;
         setScore(finalScore);
 
-        // Update records in offline storage
-        const modeLabel =
-          difficulty === 'beginner'
-            ? 'Beginner'
-            : difficulty === 'intermediate'
-            ? 'Intermediate'
-            : 'Expert';
-
-        const updatedRecords = saveNewRecord({
-          mode: modeLabel,
-          time: timerVal,
-          score: finalScore,
-          date: 'Today',
-          timestamp: Date.now(),
-          seed,
-        });
-        setRecords(updatedRecords);
+        if (accountName) {
+          void fetch('/api/score', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ score: finalScore }),
+          });
+        }
 
         // Update user stats
         const currentBestTime =
@@ -276,7 +231,7 @@ export default function App() {
         setIsGameOverModalOpen(true);
       }
     },
-    [difficulty, isDaily, seed, settings, stats, stopTimer, timerVal]
+    [accountName, difficulty, isDaily, seed, settings, stats, stopTimer, timerVal]
   );
 
   // Cascade reveal algorithm
@@ -554,7 +509,7 @@ export default function App() {
         onOpenGuide={() => setIsHelpOpen(true)}
         onOpenSettings={() => setIsSettingsOpen(true)}
         onOpenProfile={() => setIsProfileOpen(true)}
-        playerName={settings.playerName}
+        playerName={accountName ?? 'Sign in'}
       />
 
       {/* Main Content Viewport */}
@@ -616,12 +571,6 @@ export default function App() {
               onToggleFitGrid={() => setIsFitGrid(!isFitGrid)}
             />
 
-            {/* Local Device Records Card */}
-            <RecordsCard
-              records={records.filter((r) => r.mode === 'Beginner')}
-              onViewAllRecords={() => setActiveTab('records')}
-              onPlaySeed={(s) => handlePlaySpecificSeed(s, 'Beginner')}
-            />
           </div>
         )}
 
@@ -630,7 +579,10 @@ export default function App() {
         )}
 
         {activeTab === 'records' && (
-          <RecordsScreen records={records} onPlaySeed={handlePlaySpecificSeed} />
+          <LeaderboardScreen
+            accountName={accountName}
+            onOpenAccount={() => setIsProfileOpen(true)}
+          />
         )}
 
         {activeTab === 'stats' && (
@@ -670,21 +622,16 @@ export default function App() {
         }}
         onResetData={() => {
           resetAllStorage();
-          setRecords(getStoredRecords());
           setStats(getStoredStats());
         }}
         onClose={() => setIsSettingsOpen(false)}
       />
 
-      <ProfileModal
+      <AccountModal
         isOpen={isProfileOpen}
-        playerName={settings.playerName}
-        stats={stats}
-        onUpdateName={(name) => {
-          const updated = { ...settings, playerName: name };
-          setSettings(updated);
-          saveSettings(updated);
-        }}
+        username={accountName}
+        onAuthenticated={setAccountName}
+        onLogout={() => setAccountName(null)}
         onClose={() => setIsProfileOpen(false)}
       />
 

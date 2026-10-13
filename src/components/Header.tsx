@@ -52,8 +52,8 @@ export const Header: React.FC<HeaderProps> = ({
 
           <button
             onClick={onOpenProfile}
-            aria-label="Player Profile"
-            title={`Player Profile (${playerName})`}
+            aria-label={playerName === 'Sign in' ? 'Sign in or create account' : `Account: ${playerName}`}
+            title={playerName === 'Sign in' ? 'Sign in or create account' : `Account: ${playerName}`}
             className="w-8 h-8 rounded-full bg-[#b4c5ff] flex items-center justify-center ml-1 text-[#002979] hover:brightness-110 active:scale-95 transition-transform font-bold text-xs"
           >
             <span className="material-symbols-outlined text-[18px]">person</span>

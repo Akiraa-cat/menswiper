@@ -4,6 +4,11 @@ import react from '@vitejs/plugin-react';
 export default defineNuxtConfig({
   compatibilityDate: '2025-07-15',
   devtools: { enabled: true },
+  runtimeConfig: {
+    appsScriptUrl: '',
+    appsScriptSharedSecret: '',
+    sessionSecret: '',
+  },
   css: ['~/../src/index.css'],
   vite: {
     plugins: [tailwindcss(), react()],
