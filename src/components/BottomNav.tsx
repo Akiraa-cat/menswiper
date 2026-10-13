@@ -1,6 +1,6 @@
 import React from 'react';
 
-export type NavTab = 'play' | 'daily' | 'records';
+export type NavTab = 'play' | 'daily' | 'records' | 'stats';
 
 interface BottomNavProps {
   activeTab: NavTab;
@@ -12,6 +12,7 @@ export const BottomNav: React.FC<BottomNavProps> = ({ activeTab, onSelectTab }) 
     { id: 'play', label: 'Play', icon: 'sports_esports' },
     { id: 'daily', label: 'Daily', icon: 'calendar_today' },
     { id: 'records', label: 'Leaderboard', icon: 'leaderboard' },
+    { id: 'stats', label: 'Stats', icon: 'analytics' },
   ];
 
   return (

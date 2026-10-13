@@ -34,6 +34,13 @@ export interface GameSettings {
   longPressDelay: number;
 }
 
+export interface LocalGameStats {
+  gamesPlayed: number;
+  gamesWon: number;
+  totalScore: number;
+  dailyWinDates: string[];
+}
+
 export const DIFFICULTY_PRESETS: Record<Difficulty, DifficultyConfig> = {
   beginner: {
     name: 'beginner',

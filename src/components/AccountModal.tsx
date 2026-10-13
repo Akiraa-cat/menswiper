@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { readJsonResponse } from '../utils/http';
 
 interface AccountModalProps {
   isOpen: boolean;
@@ -18,6 +19,7 @@ export const AccountModal: React.FC<AccountModalProps> = ({
   const [mode, setMode] = useState<'login' | 'register'>('login');
   const [usernameInput, setUsernameInput] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -34,8 +36,7 @@ export const AccountModal: React.FC<AccountModalProps> = ({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username: usernameInput, password }),
       });
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.statusMessage ?? 'Account request failed.');
+      const data = await readJsonResponse<{ username: string }>(response);
       onAuthenticated(data.username);
       setPassword('');
     } catch (requestError) {
@@ -120,16 +121,30 @@ export const AccountModal: React.FC<AccountModalProps> = ({
               </label>
               <label className="block text-xs font-semibold text-[#A5AFB9]">
                 Password
-                <input
-                  required
-                  type="password"
-                  autoComplete={mode === 'register' ? 'new-password' : 'current-password'}
-                  value={password}
-                  onChange={(event) => setPassword(event.target.value)}
-                  minLength={8}
-                  maxLength={128}
-                  className="block w-full mt-1 px-3 py-2.5 rounded-lg bg-[#1b2026] border border-[#30353c] text-sm text-[#F4F6F8] focus:outline-none focus:border-[#75daa5]"
-                />
+                <span className="relative mt-1 block">
+                  <input
+                    required
+                    type={showPassword ? 'text' : 'password'}
+                    autoComplete={mode === 'register' ? 'new-password' : 'current-password'}
+                    value={password}
+                    onChange={(event) => setPassword(event.target.value)}
+                    minLength={8}
+                    maxLength={128}
+                    className="block w-full pl-3 pr-11 py-2.5 rounded-lg bg-[#1b2026] border border-[#30353c] text-sm text-[#F4F6F8] focus:outline-none focus:border-[#75daa5]"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword((visible) => !visible)}
+                    aria-label={showPassword ? 'Hide password' : 'Show password'}
+                    aria-pressed={showPassword}
+                    title={showPassword ? 'Hide password' : 'Show password'}
+                    className="absolute inset-y-0 right-0 w-10 flex items-center justify-center text-[#A5AFB9] hover:text-[#F4F6F8]"
+                  >
+                    <span className="material-symbols-outlined text-[20px]">
+                      {showPassword ? 'visibility_off' : 'visibility'}
+                    </span>
+                  </button>
+                </span>
               </label>
               {mode === 'register' && (
                 <p className="text-[11px] text-[#A5AFB9]">Use 3-24 letters, numbers, or underscores for your username.</p>

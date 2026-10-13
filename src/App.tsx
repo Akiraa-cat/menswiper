@@ -12,6 +12,7 @@ import {
   GameStatus,
   FaceMood,
   GameSettings,
+  LocalGameStats,
 } from './types/game';
 import {
   createEmptyGrid,
@@ -20,9 +21,13 @@ import {
   getDailySeed,
 } from './utils/prng';
 import {
+  getStoredGameStats,
+  getLocalDateKey,
+  recordGameResult,
   getStoredSettings,
   saveSettings,
 } from './utils/storage';
+import { readJsonResponse } from './utils/http';
 import { playSound, triggerHaptic } from './utils/audio';
 
 import { Header } from './components/Header';
@@ -40,6 +45,7 @@ import { SeedModal } from './components/SeedModal';
 import { BottomNav, NavTab } from './components/BottomNav';
 import { DailyScreen } from './components/DailyScreen';
 import { LeaderboardScreen } from './components/LeaderboardScreen';
+import { StatsScreen } from './components/StatsScreen';
 
 export default function App() {
   // Navigation
@@ -56,6 +62,7 @@ export default function App() {
 
   // Storage State
   const [settings, setSettings] = useState<GameSettings>(getStoredSettings());
+  const [gameStats, setGameStats] = useState<LocalGameStats>(getStoredGameStats());
   const [accountName, setAccountName] = useState<string | null>(null);
   const [guestGamesCompleted, setGuestGamesCompleted] = useState(0);
   const [guestScore, setGuestScore] = useState(0);
@@ -81,22 +88,37 @@ export default function App() {
   const timerIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const gameWasStartedRef = useRef(false);
 
-  const completeGuestGame = useCallback(() => {
+  const completeGame = useCallback((won: boolean, points: number) => {
     if (!gameWasStartedRef.current) return;
     gameWasStartedRef.current = false;
+
+    let dailyWinDate: string | undefined;
+    if (won && isDaily) {
+      for (let offset = 0; offset <= 6; offset++) {
+        if (seed === getDailySeed(offset).code) {
+          const dailyDate = new Date();
+          dailyDate.setDate(dailyDate.getDate() - offset);
+          dailyWinDate = getLocalDateKey(dailyDate);
+          break;
+        }
+      }
+    }
+    setGameStats(recordGameResult(won, points, dailyWinDate));
+
     if (accountName) return;
 
     const completedCount = guestGamesCompleted + 1;
     setGuestGamesCompleted(completedCount);
     if (completedCount >= 2 && !isLoginPromptDismissed) setIsLoginPromptPending(true);
-  }, [accountName, guestGamesCompleted, isLoginPromptDismissed]);
+  }, [accountName, guestGamesCompleted, isDaily, isLoginPromptDismissed, seed]);
 
   // Load local preferences; guest account state is intentionally memory-only.
   useEffect(() => {
     setSettings(getStoredSettings());
+    setGameStats(getStoredGameStats());
     fetch('/api/account/me')
-      .then((response) => response.json())
-      .then((data: { username: string | null }) => setAccountName(data.username))
+      .then((response) => readJsonResponse<{ username: string | null }>(response))
+      .then((data) => setAccountName(data.username))
       .catch(() => setAccountName(null));
   }, []);
 
@@ -226,12 +248,11 @@ export default function App() {
         setGrid(finalizedGrid);
         setRemainingMines(0);
 
-        completeGuestGame();
-
         // Bonus score calculation
         const timeBonus = Math.max(0, 500 - timerVal * 2);
         const finalScore = currentScore + 500 + timeBonus;
         setScore(finalScore);
+        completeGame(true, finalScore);
 
         if (accountName) {
           void saveScoreToAccount(finalScore);
@@ -242,7 +263,7 @@ export default function App() {
         setIsGameOverModalOpen(true);
       }
     },
-    [accountName, completeGuestGame, difficulty, saveScoreToAccount, settings, stopTimer, timerVal]
+    [accountName, completeGame, difficulty, saveScoreToAccount, settings, stopTimer, timerVal]
   );
 
   // Cascade reveal algorithm
@@ -306,13 +327,13 @@ export default function App() {
       );
 
       setGrid(revealedGrid);
+      completeGame(false, 0);
 
       setTimeout(() => {
         setIsGameOverModalOpen(true);
-        completeGuestGame();
       }, 700);
     },
-    [completeGuestGame, settings, stopTimer]
+    [completeGame, settings, stopTimer]
   );
 
   // Cell Click (Dig or Flag based on active input mode)
@@ -576,8 +597,10 @@ export default function App() {
         )}
 
         {activeTab === 'daily' && (
-          <DailyScreen onPlayDaily={handlePlaySpecificSeed} />
+          <DailyScreen stats={gameStats} onPlayDaily={handlePlaySpecificSeed} />
         )}
+
+        {activeTab === 'stats' && <StatsScreen stats={gameStats} />}
 
         {activeTab === 'records' && (
           <LeaderboardScreen

@@ -1,12 +1,19 @@
 import React from 'react';
 import { getDailySeed } from '../utils/prng';
+import { LocalGameStats } from '../types/game';
+import { getDailyWinStreak, getLocalDateKey } from '../utils/storage';
 
 interface DailyScreenProps {
+  stats: LocalGameStats;
   onPlayDaily: (seed: string) => void;
 }
 
-export const DailyScreen: React.FC<DailyScreenProps> = ({ onPlayDaily }) => {
+export const DailyScreen: React.FC<DailyScreenProps> = ({ stats, onPlayDaily }) => {
   const today = getDailySeed(0);
+  const todayKey = getLocalDateKey(new Date());
+  const completedDailyDates = new Set(stats.dailyWinDates);
+  const isTodayCompleted = completedDailyDates.has(todayKey);
+  const dailyWinStreak = getDailyWinStreak(stats.dailyWinDates);
 
   // Past 6 days archive
   const pastDays = [1, 2, 3, 4, 5, 6].map((offset) => {
@@ -15,6 +22,7 @@ export const DailyScreen: React.FC<DailyScreenProps> = ({ onPlayDaily }) => {
     date.setDate(date.getDate() - offset);
     return {
       ...info,
+      completed: completedDailyDates.has(getLocalDateKey(date)),
       dateString: date.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' }),
     };
   });
@@ -45,8 +53,19 @@ export const DailyScreen: React.FC<DailyScreenProps> = ({ onPlayDaily }) => {
             onClick={() => onPlayDaily(today.code)}
             className="px-4 py-2 bg-[#b4c5ff] text-[#002979] font-bold text-xs rounded-xl shadow-md hover:brightness-110 active:scale-95 transition-all"
           >
-            Launch Daily Seed
+            {isTodayCompleted ? 'Play Again' : 'Launch Daily Seed'}
           </button>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-2 gap-3">
+        <div className="p-3 bg-[#1b2026] rounded-xl border border-[#252a31] text-center">
+          <span className="text-[11px] text-[#A5AFB9] font-bold uppercase">Daily win streak</span>
+          <div className="text-2xl font-black text-[#F0BD4F] digital-display mt-1">{dailyWinStreak} days</div>
+        </div>
+        <div className="p-3 bg-[#1b2026] rounded-xl border border-[#252a31] text-center">
+          <span className="text-[11px] text-[#A5AFB9] font-bold uppercase">Daily wins</span>
+          <div className="text-2xl font-black text-[#75daa5] digital-display mt-1">{stats.dailyWinDates.length}</div>
         </div>
       </div>
 
@@ -66,6 +85,7 @@ export const DailyScreen: React.FC<DailyScreenProps> = ({ onPlayDaily }) => {
               <div>
                 <div className="flex items-center gap-2">
                   <span className="font-mono text-xs font-bold text-[#F4F6F8]">{day.code}</span>
+                  {day.completed && <span className="text-[10px] text-[#75daa5] font-bold">Won</span>}
                 </div>
                 <div className="text-[11px] text-[#A5AFB9]">{day.dateString}</div>
               </div>

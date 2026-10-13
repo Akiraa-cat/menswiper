@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { readJsonResponse } from '../utils/http';
 
 interface LeaderboardEntry {
   rank: number;
@@ -20,9 +21,8 @@ export const LeaderboardScreen: React.FC<LeaderboardScreenProps> = ({ accountNam
     setIsLoading(true);
     setError('');
     try {
-      const response = await fetch('/api/leaderboard');
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.statusMessage ?? 'Could not load leaderboard.');
+      const response = await fetch('/api/scoreboard');
+      const data = await readJsonResponse<{ entries: LeaderboardEntry[] }>(response);
       setEntries(data.entries);
     } catch (loadError) {
       setError(loadError instanceof Error ? loadError.message : 'Could not load leaderboard.');

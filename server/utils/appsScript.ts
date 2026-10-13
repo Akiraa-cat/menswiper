@@ -46,8 +46,16 @@ export async function callAppsScript(
       method: 'POST',
       body: { action, ...values },
     });
-  } catch {
-    throw createError({ statusCode: 502, statusMessage: 'Could not reach the Apps Script web app.' });
+  } catch (error) {
+    const upstreamStatus = typeof error === 'object' && error !== null && 'response' in error
+      ? (error.response as { status?: number }).status
+      : undefined;
+    throw createError({
+      statusCode: 502,
+      statusMessage: upstreamStatus === 401
+        ? 'Apps Script returned 401. Set Web App access to Anyone and deploy a new version.'
+        : 'Could not reach the Apps Script web app.',
+    });
   }
 
   if (!result.ok) {
