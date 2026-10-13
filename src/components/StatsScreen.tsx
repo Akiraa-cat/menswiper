@@ -18,7 +18,7 @@ export const StatsScreen: React.FC<StatsScreenProps> = ({ stats }) => {
     { label: 'Win rate', value: `${winRate}%`, color: 'text-[#b4c5ff]' },
     { label: 'Points earned', value: stats.totalScore.toLocaleString(), color: 'text-[#F0BD4F]' },
     { label: 'Daily win streak', value: `${dailyWinStreak} days`, color: 'text-[#FF8B68]' },
-    { label: 'Daily seeds won', value: stats.dailyWinDates.length.toLocaleString(), color: 'text-[#75daa5]' },
+    { label: 'Daily puzzles solved', value: stats.dailyWinDates.length.toLocaleString(), color: 'text-[#75daa5]' },
   ];
 
   return (

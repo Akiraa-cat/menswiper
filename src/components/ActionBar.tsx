@@ -4,7 +4,7 @@ import { InputMode } from '../types/game';
 interface ActionBarProps {
   mode: InputMode;
   onSetMode: (mode: InputMode) => void;
-  onNewRngMap: () => void;
+  onNewMap: () => void;
   isFitGrid: boolean;
   onToggleFitGrid: () => void;
 }
@@ -12,7 +12,7 @@ interface ActionBarProps {
 export const ActionBar: React.FC<ActionBarProps> = ({
   mode,
   onSetMode,
-  onNewRngMap,
+  onNewMap,
   isFitGrid,
   onToggleFitGrid,
 }) => {
@@ -55,7 +55,7 @@ export const ActionBar: React.FC<ActionBarProps> = ({
       {/* Secondary Utilities: New Map & Fit Grid */}
       <div className="flex items-center justify-between gap-2">
         <button
-          onClick={onNewRngMap}
+          onClick={onNewMap}
           className="flex-1 flex items-center justify-center gap-2 py-2 px-3 bg-[#1b2026] hover:bg-[#222932] border border-[#252a31]/60 rounded-xl text-[#F4F6F8] text-[12px] font-semibold transition-colors min-h-[44px] active:scale-[0.98]"
         >
           <svg className="w-4 h-4 text-[#75daa5] shrink-0" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">

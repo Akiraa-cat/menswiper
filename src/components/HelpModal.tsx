@@ -18,7 +18,7 @@ export const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
         <div className="flex items-center justify-between pb-3 border-b border-[#30353c]">
           <div className="flex items-center gap-2">
             <span className="material-symbols-outlined text-[#b4c5ff] text-[22px]">help_outline</span>
-            <h2 className="text-[18px] font-bold text-[#F4F6F8]">Game Guide & Tactical Manual</h2>
+            <h2 className="text-[18px] font-bold text-[#F4F6F8]">How to play</h2>
           </div>
           <button
             onClick={onClose}
@@ -60,18 +60,18 @@ export const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
           {/* Tactical Chord */}
           <div className="p-3 bg-[#1b2026] rounded-xl border border-[#252a31]">
             <h3 className="text-[#75daa5] font-bold text-[13px] flex items-center gap-1.5">
-              <span>⚡</span> Tactical Chord Technique
+              <span>⚡</span> Quick clear
             </h3>
             <p className="mt-1 text-xs text-[#A5AFB9]">
               Once you have flagged the correct number of mines around a revealed number (e.g., cell has <strong>2</strong> and you flagged 2 neighbors), <strong>tap the revealed number</strong> to instantly sweep all remaining adjacent unflagged cells at once!
             </p>
           </div>
 
-          {/* PRNG Seed Engine */}
+          {/* Custom board codes */}
           <div>
-            <h3 className="text-[#F4F6F8] font-bold text-[14px] mb-1">Deterministic PRNG Seed Engine</h3>
+            <h3 className="text-[#F4F6F8] font-bold text-[14px] mb-1">Play the same board</h3>
             <p>
-              Every layout is governed by a reproducible seed (like <code className="text-[#75daa5] bg-[#0a0f14] px-1 py-0.5 rounded">#RNG-8492</code>). You can replay or share seeds with friends to compete on the exact same mine distribution.
+              Give a friend your board code to play the exact same layout and compare how you do.
             </p>
             <p className="mt-1 text-xs text-[#75daa5]">
               ✓ First reveal is guaranteed 100% mine-free with an automatic opening.

@@ -1,48 +1,44 @@
 import React from 'react';
 
 interface SubBarProps {
-  seed: string;
   isDaily: boolean;
-  dailyLabel: string;
   onRegenerateSeed: () => void;
   onOpenSeedModal: () => void;
   onLoadDailySeed: () => void;
 }
 
 export const SubBar: React.FC<SubBarProps> = ({
-  seed,
   isDaily,
-  dailyLabel,
   onRegenerateSeed,
   onOpenSeedModal,
   onLoadDailySeed,
 }) => {
   return (
     <div className="flex items-center justify-between text-[#A5AFB9] text-xs pt-0.5">
-      {/* Left segment: Mode badge & Seed selector */}
+      {/* Board options */}
       <div className="flex items-center gap-1.5 flex-wrap">
         <span className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-[#1b2026] text-[11px] font-bold text-[#75daa5] border border-[#252a31]/60">
           <svg className="w-3 h-3 text-[#75daa5] shrink-0" fill="currentColor" viewBox="0 0 24 24">
             <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14h2v2h-2v-2zm0-10h2v8h-2V6z" />
           </svg>
-          <span className="whitespace-nowrap">Classic RnG</span>
+          <span className="whitespace-nowrap">Classic</span>
         </span>
 
         <div className="inline-flex items-center bg-[#1b2026] rounded-lg border border-[#252a31]/60 hover:bg-[#222932] transition-colors overflow-hidden">
           <button
             onClick={onOpenSeedModal}
-            title="Click to view or edit seed"
-            className="px-2 py-1 text-[11px] font-bold text-[#F4F6F8] tracking-wider hover:text-[#b4c5ff] transition-colors"
+            title="Board options and custom code"
+            className="px-2 py-1 text-[11px] font-bold text-[#F4F6F8] hover:text-[#b4c5ff] transition-colors"
           >
-            {seed}
+            Board options
           </button>
           <button
             onClick={(e) => {
               e.stopPropagation();
               onRegenerateSeed();
             }}
-            title="Reroll new PRNG seed"
-            aria-label="Reroll seed"
+            title="Shuffle board"
+            aria-label="Shuffle board"
             className="pr-2 py-1 text-[#A5AFB9] hover:text-[#F4F6F8] hover:scale-110 active:rotate-180 transition-all flex items-center"
           >
             <svg
@@ -58,10 +54,10 @@ export const SubBar: React.FC<SubBarProps> = ({
         </div>
       </div>
 
-      {/* Right segment: Daily challenge trigger */}
+      {/* Daily puzzle shortcut */}
       <button
         onClick={onLoadDailySeed}
-        title="Load current daily challenge seed"
+        title="Play today's shared puzzle"
         className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg border transition-all text-[11px] font-bold ${
           isDaily
             ? 'bg-[#7c9cff]/20 text-[#b4c5ff] border-[#7c9cff]/40 shadow-sm'
@@ -80,7 +76,7 @@ export const SubBar: React.FC<SubBarProps> = ({
           <line x1="8" x2="8" y1="2" y2="6" />
           <line x1="3" x2="21" y1="10" y2="10" />
         </svg>
-        <span className="whitespace-nowrap">{dailyLabel}</span>
+        <span className="whitespace-nowrap">Today's puzzle</span>
       </button>
     </div>
   );

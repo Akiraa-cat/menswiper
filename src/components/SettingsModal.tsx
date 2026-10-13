@@ -43,7 +43,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
         <div className="flex items-center justify-between pb-3 border-b border-[#30353c]">
           <div className="flex items-center gap-2">
             <span className="material-symbols-outlined text-[#b4c5ff] text-[22px]">settings</span>
-            <h2 className="text-[18px] font-bold text-[#F4F6F8]">Preferences & Tactical Settings</h2>
+            <h2 className="text-[18px] font-bold text-[#F4F6F8]">Settings</h2>
           </div>
           <button
             onClick={onClose}

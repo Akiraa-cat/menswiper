@@ -15,6 +15,7 @@ export const SeedModal: React.FC<SeedModalProps> = ({
 }) => {
   const [inputVal, setInputVal] = useState(currentSeed);
   const [copied, setCopied] = useState(false);
+  const displayCode = currentSeed.replace(/^#(?:RNG|DAILY)-/i, '');
 
   if (!isOpen) return null;
 
@@ -26,11 +27,8 @@ export const SeedModal: React.FC<SeedModalProps> = ({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    let cleaned = inputVal.trim();
+    const cleaned = inputVal.trim();
     if (!cleaned) return;
-    if (!cleaned.startsWith('#')) {
-      cleaned = `#${cleaned}`;
-    }
     onSetSeed(cleaned);
     onClose();
   };
@@ -45,7 +43,7 @@ export const SeedModal: React.FC<SeedModalProps> = ({
         <div className="flex items-center justify-between pb-3 border-b border-[#30353c]">
           <div className="flex items-center gap-2">
             <span className="material-symbols-outlined text-[#75daa5] text-[22px]">shuffle</span>
-            <h2 className="text-[18px] font-bold text-[#F4F6F8]">PRNG Seed Engine</h2>
+            <h2 className="text-[18px] font-bold text-[#F4F6F8]">Custom board</h2>
           </div>
           <button
             onClick={onClose}
@@ -59,9 +57,9 @@ export const SeedModal: React.FC<SeedModalProps> = ({
         <div className="py-4 space-y-4">
           {/* Current Seed display */}
           <div className="p-3 bg-[#1b2026] rounded-xl border border-[#252a31]">
-            <div className="text-[11px] font-bold text-[#A5AFB9] uppercase mb-1">Active PRNG Seed</div>
+            <div className="text-[11px] font-bold text-[#A5AFB9] uppercase mb-1">Current board code</div>
             <div className="flex items-center justify-between">
-              <span className="font-mono text-base font-bold text-[#75daa5]">{currentSeed}</span>
+              <span className="font-mono text-base font-bold text-[#75daa5]">{displayCode}</span>
               <button
                 onClick={handleCopy}
                 className="px-2.5 py-1 text-xs font-semibold bg-[#222932] text-[#F4F6F8] rounded-lg border border-[#30353c] hover:bg-[#353a40]"
@@ -73,16 +71,16 @@ export const SeedModal: React.FC<SeedModalProps> = ({
 
           {/* Custom Seed Input */}
           <form onSubmit={handleSubmit} className="space-y-2">
-            <label className="text-xs font-semibold text-[#A5AFB9]">Load Custom Seed / Password</label>
+            <label className="text-xs font-semibold text-[#A5AFB9]">Enter a board code</label>
             <input
               type="text"
               value={inputVal}
               onChange={(e) => setInputVal(e.target.value)}
-              placeholder="#RNG-XXXX or text"
+              placeholder="Type a word or code"
               className="w-full bg-[#1b2026] text-[#F4F6F8] font-mono px-3 py-2 rounded-xl border border-[#30353c] focus:outline-none focus:border-[#7c9cff] text-sm"
             />
             <p className="text-[11px] text-[#A5AFB9] leading-tight">
-              Every unique seed creates an identical, reproducible minefield across all devices.
+              Use the same code to play the same board and challenge a friend.
             </p>
 
             <div className="pt-2 flex gap-2">
@@ -90,7 +88,7 @@ export const SeedModal: React.FC<SeedModalProps> = ({
                 type="submit"
                 className="flex-1 py-2.5 bg-[#b4c5ff] text-[#002979] font-bold rounded-xl text-sm hover:brightness-110 active:scale-95 transition-all"
               >
-                Apply Seed
+                Play this board
               </button>
               <button
                 type="button"

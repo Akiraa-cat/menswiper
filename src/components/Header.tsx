@@ -25,7 +25,7 @@ export const Header: React.FC<HeaderProps> = ({
           </div>
           <div className="flex flex-col">
             <h1 className="text-[18px] font-semibold tracking-tight text-[#F4F6F8] leading-tight">
-              Minesweeper RnG
+              Minesweeper
             </h1>
           </div>
         </div>

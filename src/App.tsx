@@ -204,7 +204,7 @@ export default function App() {
     playSound.click(settings.soundEnabled);
   };
 
-  // Handle Load Daily Seed
+  // Load the shared puzzle for today
   const handleLoadDailySeed = () => {
     const daily = getDailySeed(0);
     setIsDaily(true);
@@ -549,9 +549,7 @@ export default function App() {
             {/* Sub Bar (Seed & Daily) */}
             <div className="mt-2">
               <SubBar
-                seed={seed}
                 isDaily={isDaily}
-                dailyLabel={getDailySeed(0).label}
                 onRegenerateSeed={handleRegenerateSeed}
                 onOpenSeedModal={() => setIsSeedModalOpen(true)}
                 onLoadDailySeed={handleLoadDailySeed}
@@ -588,7 +586,7 @@ export default function App() {
             <ActionBar
               mode={mode}
               onSetMode={setMode}
-              onNewRngMap={handleRegenerateSeed}
+              onNewMap={handleRegenerateSeed}
               isFitGrid={isFitGrid}
               onToggleFitGrid={() => setIsFitGrid(!isFitGrid)}
             />
@@ -619,7 +617,6 @@ export default function App() {
         isWon={status === 'won'}
         timeSeconds={timerVal}
         score={score}
-        seed={seed}
         saveMessage={scoreSaveError}
         onPlayAgain={handleRegenerateSeed}
         onInspectBoard={() => setIsGameOverModalOpen(false)}

@@ -5,7 +5,6 @@ interface VictoryDefeatModalProps {
   isWon: boolean;
   timeSeconds: number;
   score: number;
-  seed: string;
   saveMessage?: string;
   onPlayAgain: () => void;
   onInspectBoard: () => void;
@@ -17,7 +16,6 @@ export const VictoryDefeatModal: React.FC<VictoryDefeatModalProps> = ({
   isWon,
   timeSeconds,
   score,
-  seed,
   saveMessage,
   onPlayAgain,
   onInspectBoard,
@@ -54,14 +52,14 @@ export const VictoryDefeatModal: React.FC<VictoryDefeatModalProps> = ({
 
         {/* Modal Title */}
         <h2 className="text-[22px] font-bold text-[#F4F6F8]">
-          {isWon ? 'Board Cleared!' : 'Mine Detonated'}
+          {isWon ? 'All clear!' : 'Boom!'}
         </h2>
 
         {/* Modal Subtitle */}
         <p className="text-[13px] text-[#A5AFB9] mt-1">
           {isWon
-            ? `Exceptional tactical sweeps across seed ${seed}.`
-            : `Subsurface mine triggered across seed ${seed}.`}
+            ? 'Nice one. You cleared the whole board!'
+            : 'That one got you. Ready for another round?'}
         </p>
 
         {/* Performance Metrics Box */}
@@ -88,14 +86,14 @@ export const VictoryDefeatModal: React.FC<VictoryDefeatModalProps> = ({
             onClick={onPlayAgain}
             className="w-full py-3 bg-[#b4c5ff] text-[#002979] font-bold text-[14px] rounded-xl shadow-md hover:brightness-110 active:scale-[0.98] transition-all min-h-[44px]"
           >
-            Play Again (New Seed)
+            Play again
           </button>
 
           <button
             onClick={onInspectBoard}
             className="w-full py-2.5 bg-[#1b2026] text-[#F4F6F8] font-semibold text-[13px] rounded-xl border border-[#252a31] hover:bg-[#353a40] transition-colors min-h-[44px]"
           >
-            Inspect Board
+            See the board
           </button>
         </div>
       </div>
